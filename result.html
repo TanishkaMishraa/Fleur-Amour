@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Curated Collection | Fleur Amour</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        body { background: #000; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .serif-font { font-family: 'Playfair Display', serif; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="py-20 px-6">
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-20">
+            <h4 class="text-gray-500 uppercase tracking-[0.4em] text-xs mb-4">Your Fragrance Profile</h4>
+            <h1 class="serif-font text-5xl md:text-7xl">The Curated Matches</h1>
+        </header>
+
+        <div id="primary-match" class="glass-card rounded-[40px] p-8 md:p-16 flex flex-col md:row items-center gap-12 mb-20 opacity-0 transition-all duration-1000 transform translate-y-10">
+            <div class="w-full md:w-1/2">
+                <img id="main-img" src="" class="w-full rounded-3xl shadow-2xl border border-white/10 object-cover h-[500px]">
+                <span class="bg-white/10 px-4 py-1 rounded-full text-[10px] uppercase tracking-widest text-white">Top Match</span>
+                <h2 id="main-name" class="serif-font text-6xl"></h2>
+                <p id="main-desc" class="text-gray-400 leading-relaxed text-lg font-light"></p>
+                <div class="pt-4">
+                    <button class="px-10 py-4 bg-white text-black rounded-full hover:bg-gray-200 transition uppercase tracking-widest text-xs font-bold">Add to Collection</button>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="serif-font text-3xl mb-10 text-center">Explore Alternative Moods</h3>
+        <div id="secondary-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            </div>
+
+        <div class="text-center mt-20">
+            <a href="quiz.html" class="text-gray-500 hover:text-white uppercase tracking-[0.3em] text-[10px] border-b border-white/20 pb-2 transition">Retake Quiz</a>
+        </div>
+    </div>
+
+    <script>
+        const scents = {
+            ethereal: {
+                name: "Azure Mist",
+                desc: "A weightless blend of bergamot and sea salt. It captures the crisp morning air on a coastal cliff.",
+                img: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=800"
+            },
+            nocturnal: {
+                name: "Velvet Oud",
+                desc: "Deep, bold, and unapologetic. Designed for evening nights and high-statement moments.",
+                img: "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=800"
+            },
+            romantic: {
+                name: "Blush Silk",
+                desc: "Soft rose petals layered with creamy vanilla. A gentle, emotional embrace for the romantic soul.",
+                img: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=800"
+            },
+            sophisticate: {
+                name: "Golden Amber",
+                desc: "Warm sandalwood and honeyed amber. Balanced and sophisticated for daily refinement.",
+                img: "https://images.unsplash.com/photo-1616948055599-82090c74f115?w=800"
+            }
+        };
+
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            const winner = params.get('match') || 'ethereal';
+            
+            // Set Primary
+            const primary = scents[winner];
+            document.getElementById('main-name').innerText = primary.name;
+            document.getElementById('main-desc').innerText = primary.desc;
+            document.getElementById('main-img').src = primary.img;
+            document.getElementById('primary-match').classList.remove('opacity-0', 'translate-y-10');
+
+            // Set Secondaries (Everyone except the winner)
+            const grid = document.getElementById('secondary-grid');
+            Object.keys(scents).forEach(key => {
+                if (key !== winner) {
+                    const s = scents[key];
+                    grid.innerHTML += `
+                        <div class="glass-card p-6 rounded-[30px] flex items-center gap-6 group hover:border-white/30 transition">
+                            <img src="${s.img}" class="w-24 h-24 rounded-2xl object-cover">
+                            <div>
+                                <h4 class="serif-font text-xl mb-1">${s.name}</h4>
+                                <p class="text-gray-500 text-xs line-clamp-2">${s.desc}</p>
+                                <button class="mt-3 text-[10px] uppercase tracking-widest text-white/50 group-hover:text-white transition">View Details</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        };
+    </script>
+</body>
+</html>

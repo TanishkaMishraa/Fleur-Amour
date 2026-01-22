@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Profile | Fleur Amour</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #000;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .serif-font { font-family: 'Playfair Display', serif; }
+        .bg-image {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)), 
+                        url('https://www.globalcosmeticsnews.com/wp-content/uploads/2020/11/flowerbomb1_v3-950x640.jpg');
+            background-size: cover;
+            background-position: center;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-image"></div>
+
+    <div class="w-full max-w-xl bg-black/40 backdrop-blur-xl border border-white/10 p-12 rounded-[40px] shadow-2xl">
+        <div class="text-center mb-10">
+            <h1 class="serif-font text-4xl text-white mb-2">Begin Your Journey</h1>
+            <p class="text-gray-400 text-[10px] uppercase tracking-[0.4em]">Create Your Scent Profile</p>
+        </div>
+
+        <form action="quiz.html" class="space-y-6">
+            <div class="grid grid-cols-2 gap-6">
+                <input type="text" placeholder="First Name" required class="w-full bg-transparent border-b border-white/10 py-3 text-white focus:outline-none focus:border-white transition-all font-light text-sm">
+                <input type="text" placeholder="Last Name" required class="w-full bg-transparent border-b border-white/10 py-3 text-white focus:outline-none focus:border-white transition-all font-light text-sm">
+            </div>
+            
+            <input type="email" placeholder="Email Address" required class="w-full bg-transparent border-b border-white/10 py-3 text-white focus:outline-none focus:border-white transition-all font-light text-sm">
+            
+            <input type="password" placeholder="Create Password" required class="w-full bg-transparent border-b border-white/10 py-3 text-white focus:outline-none focus:border-white transition-all font-light text-sm">
+
+            <div class="pt-6">
+                <button type="submit" class="w-full py-4 bg-white text-black rounded-full font-medium uppercase tracking-widest text-xs hover:bg-gray-200 transition-all duration-300 transform hover:scale-[1.01]">
+                    Create Profile
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-10 pt-6 border-t border-white/5 text-center">
+            <p class="text-gray-500 text-[10px] uppercase tracking-[0.2em] mb-4">Already a member?</p>
+            <a href="login.html" class="text-white text-[10px] uppercase tracking-widest hover:underline underline-offset-8 transition-all">
+                Sign In to Your Account
+            </a>
+        </div>
+    </div>
+</body>
+</html>

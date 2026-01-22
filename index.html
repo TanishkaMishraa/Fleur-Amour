@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fleur Amour | Experience Luxury</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #000;
+            margin: 0;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Sticky Hero Section */
+        .hero-wrapper {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+            /* Added this to prevent hero from blocking clicks when invisible */
+            pointer-events: none; 
+        }
+
+        .hero-container {
+            background-color: #1a1a1a;
+            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s;
+            pointer-events: auto; /* Re-enable clicks on the card itself */
+        }
+
+        .parallax-bg {
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
+                        url('https://www.globalcosmeticsnews.com/wp-content/uploads/2020/11/flowerbomb1_v3-950x640.jpg');
+            background-size: cover;
+            background-position: center;
+            z-index: 0;
+        }
+
+        .serif-font { font-family: 'Playfair Display', serif; }
+        
+        .content-section {
+            min-height: 100vh;
+            background: #000;
+            padding: 100px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            position: relative;
+            z-index: 50; /* Ensure this is above the sticky hero */
+        }
+
+        .reveal-on-scroll {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 1s ease-out;
+        }
+
+        .reveal-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #horizontalScroll::-webkit-scrollbar { display: none; }
+        #horizontalScroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            user-select: none; /* Prevents text selection while dragging */
+        }
+
+        /* Visual cue for dragging */
+        #horizontalScroll.active {
+            cursor: grabbing;
+            cursor: -webkit-grabbing;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hero-wrapper sticky top-0">
+        <div id="heroCard" class="hero-container relative w-[95%] max-w-6xl h-[650px] rounded-[40px] overflow-hidden shadow-2xl border border-white/10">
+            <div id="bgLayer" class="parallax-bg"></div>
+
+            <div class="absolute top-10 left-10 flex items-center group cursor-pointer z-20">
+                <div class="w-16 h-16 rounded-full bg-[black] border border-white/20 flex items-center justify-center overflow-hidden shadow-xl">
+                    <img src="logo.png" alt="FA" class="w-4/5 h-4/5 object-contain">
+                </div>
+                <div class="ml-4 flex flex-col justify-center">
+                    <span class="text-white font-light tracking-[0.3em] text-[10px] uppercase opacity-70">Fleur Amour</span>
+                </div>
+            </div>
+            <nav class="absolute top-10 right-12 flex space-x-8 text-white/90 text-sm tracking-widest font-light z-20 reveal" style="transition-delay: 200ms;">
+                <a href="login.html" class="hover:text-white transition decoration-px underline-offset-8 hover:underline">Log In</a>
+                <span class="text-white/30">|</span>
+                <a href="#" class="hover:text-white transition decoration-px underline-offset-8 hover:underline">Profile</a>
+            </nav>
+            <div class="absolute inset-0 flex flex-col items-start justify-center pl-16 md:pl-24 bg-gradient-to-r from-black/60 via-black/20 to-transparent z-10">
+            <div class="text-white">
+                <h2 class="serif-font text-3xl md:text-4xl italic opacity-90 mb-2 reveal" style="transition-delay: 400ms;">Discover Your</h2>
+                <h1 class="serif-font text-6xl md:text-8xl mb-6 tracking-tight reveal" style="transition-delay: 600ms;">Signature Scent</h1>
+                <p class="text-lg md:text-xl font-light opacity-80 mb-10 tracking-wide max-w-md reveal" style="transition-delay: 800ms;">
+                    Begin your personalized fragrance journey with our artisan-crafted collections.
+                </p>
+
+                <button id="ctaBtn" class="reveal inline-flex items-center px-10 py-4 border border-white/40 rounded-full text-white hover:bg-white hover:text-black transition-all duration-500 group" style="transition-delay: 1000ms;">
+                    <span class="mr-4 text-sm uppercase tracking-widest font-medium">Start Your Journey</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <div class="max-w-6xl mx-auto px-10 mb-10 flex justify-between items-end w-full">
+            <div>
+                <h2 class="serif-font text-white text-5xl mb-4 reveal-on-scroll">Our Collection</h2>
+            </div>
+            <div class="hidden md:flex space-x-4">
+                <button onclick="scrollCollection(-400)" class="w-12 h-12 rounded-full border border-white/20 text-white hover:bg-white hover:text-black transition flex items-center justify-center">←</button>
+                <button onclick="scrollCollection(400)" class="w-12 h-12 rounded-full border border-white/20 text-white hover:bg-white hover:text-black transition flex items-center justify-center">→</button>
+            </div>
+        </div>
+
+        <div id="horizontalScroll" class="flex overflow-x-auto space-x-8 px-10 pb-10 w-full no-scrollbar cursor-grab active:cursor-grabbing">
+            <div class="flex-shrink-0 w-80 group select-none">
+                <div class="relative h-[450px] rounded-2xl overflow-hidden mb-4 bg-[#111] pointer-events-none">
+                    <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=600" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700">
+                </div>
+                <h4 class="text-white serif-font text-2xl">Velvet Oud</h4>
+                <p class="text-gray-500 text-sm tracking-widest">$180.00</p>
+            </div>
+
+            <div class="flex-shrink-0 w-80 group select-none">
+                <div class="relative h-[450px] rounded-2xl overflow-hidden mb-4 bg-[#111] pointer-events-none">
+                    <img src="https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=600" class="w-full h-full object-cover opacity-80">
+                </div>
+                <h4 class="text-white serif-font text-2xl">Midnight Rose</h4>
+                <p class="text-gray-500 text-sm tracking-widest">$165.00</p>
+            </div>
+            
+            <div class="flex-shrink-0 w-80 group select-none">
+                <div class="relative h-[450px] rounded-2xl overflow-hidden mb-4 bg-[#111] pointer-events-none">
+                    <img src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=600" class="w-full h-full object-cover opacity-80">
+                </div>
+                <h4 class="text-white serif-font text-2xl">Mystic Smoke</h4>
+                <p class="text-gray-500 text-sm tracking-widest">$210.00</p>
+            </div>
+
+            <div class="flex-shrink-0 w-80 group select-none">
+                <div class="relative h-[450px] rounded-2xl overflow-hidden mb-4 bg-[#111] pointer-events-none">
+                    <img src="https://images.unsplash.com/photo-1512777576244-b846ac3d222f?q=80&w=600" class="w-full h-full object-cover opacity-80">
+                </div>
+                <h4 class="text-white serif-font text-2xl">Golden Nectar</h4>
+                <p class="text-gray-500 text-sm tracking-widest">$190.00</p>
+            </div>
+
+             <div class="flex-shrink-0 w-80 group select-none">
+                <div class="relative h-[450px] rounded-2xl overflow-hidden mb-4 bg-[#111] pointer-events-none">
+                    <img src="https://images.unsplash.com/photo-1512777576244-b846ac3d222f?q=80&w=600" class="w-full h-full object-cover opacity-80">
+                </div>
+                <h4 class="text-white serif-font text-2xl">Golden Nectar</h4>
+                <p class="text-gray-500 text-sm tracking-widest">$190.00</p>
+            </div>
+
+             <div class="flex-shrink-0 w-80 group select-none">
+                <div class="relative h-[450px] rounded-2xl overflow-hidden mb-4 bg-[#111] pointer-events-none">
+                    <img src="https://images.unsplash.com/photo-1512777576244-b846ac3d222f?q=80&w=600" class="w-full h-full object-cover opacity-80">
+                </div>
+                <h4 class="text-white serif-font text-2xl">Golden Nectar</h4>
+                <p class="text-gray-500 text-sm tracking-widest">$190.00</p>
+            </div>
+
+            
+        </div>
+    </div>
+    
+    <footer class="bg-[#0a0a0a] border-t border-white/5 pt-20 pb-10 text-white">
+    <div class="max-w-6xl mx-auto px-10">
+        
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start pb-16 border-b border-white/5">
+            <div class="md:col-span-3 flex items-center space-x-4">
+                <div class="w-100 h-100 rounded-full bg-[black] border border-white/10 flex items-center justify-center overflow-hidden shadow-lg">
+                    <img src="logo.png" alt="FA" class="w-2/3 h-2/3 object-contain">
+                </div>
+                <span class="serif-font text-2xl tracking-[0.2em] uppercase">Fleur Amour</span>
+            </div>
+
+            <div class="md:col-span-9">
+                <h4 class="text-xs uppercase tracking-[0.3em] text-gray-500 mb-4">Our Essence</h4>
+                <p class="text-gray-400 text-lg leading-relaxed font-light serif-font italic">
+                    Fleur Amour is a personalized fragrance discovery platform designed to help you find perfumes that reflect your mood, personality, and lifestyle.
+                    Instead of choosing scents by brand or chance, Fleur Amour focuses on how a fragrance makes you feel, guiding you toward scents that resonate on a deeper, more personal level. Through a simple and intuitive experience, users can create a profile, explore scent families, and receive tailored fragrance recommendations.
+                    Blending technology with emotion, Fleur Amour transforms fragrance selection into a meaningful, elegant, and luxurious journey—because a perfume is more than a scent, it is an expression of who you are.
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 pt-16">
+            <div class="md:col-span-6 flex flex-col space-y-6">
+                <h5 class="text-white text-sm uppercase tracking-widest font-semibold">Contact Us</h5>
+                <div class="space-y-4">
+                    <p class="text-gray-500 text-sm font-light">Visit our flagship atelier or reach out for a private consultation.</p>
+                    <div class="flex flex-col space-y-2">
+                        <span class="text-white text-sm">concierge@fleuramour.com</span>
+                        <span class="text-gray-500 text-xs tracking-widest uppercase">Paris | London | New York</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-20 pt-8 border-t border-white/5 text-[10px] text-gray-600 text-center uppercase tracking-[0.4em]">
+            &copy; 2026 Fleur Amour Parfumerie
+        </div>
+    </div>
+</footer>
+
+    <script>
+        // --- 1. SCROLL REVEAL & HERO EFFECT ---
+        document.addEventListener('scroll', () => {
+            const scrollPos = window.scrollY;
+            const heroCard = document.getElementById('heroCard');
+            const reveals = document.querySelectorAll('.reveal-on-scroll');
+
+            if (scrollPos < 800) {
+                const scaleValue = 1 - (scrollPos / 4000);
+                const opacityValue = 1 - (scrollPos / 600);
+                heroCard.style.transform = `scale(${scaleValue}) translateY(${scrollPos * 0.3}px)`;
+                heroCard.style.opacity = opacityValue;
+            }
+
+            reveals.forEach(el => {
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < window.innerHeight - 50) {
+                    el.classList.add('visible');
+                }
+            });
+        });
+
+        // --- 2. MOUSE PARALLAX ---
+        const heroCard = document.getElementById('heroCard');
+        const bgLayer = document.getElementById('bgLayer');
+        heroCard.addEventListener('mousemove', (e) => {
+            const rect = heroCard.getBoundingClientRect();
+            const x = (e.clientX - rect.left - rect.width / 2) / 30;
+            const y = (e.clientY - rect.top - rect.height / 2) / 30;
+            bgLayer.style.transform = `translate(${-x}px, ${-y}px) scale(1.1)`;
+        });
+
+        // --- 3. HORIZONTAL DRAG LOGIC ---
+        const slider = document.getElementById('horizontalScroll');
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        function scrollCollection(amount) {
+            slider.scrollBy({ left: amount, behavior: 'smooth' });
+        }
+
+        slider.addEventListener('mousedown', (e) => {
+            isDown = true;
+            slider.classList.add('active');
+            startX = e.pageX - slider.offsetLeft;
+            scrollLeft = slider.scrollLeft;
+        });
+
+        slider.addEventListener('mouseleave', () => {
+            isDown = false;
+            slider.classList.remove('active');
+        });
+
+        slider.addEventListener('mouseup', () => {
+            isDown = false;
+            slider.classList.remove('active');
+        });
+
+        slider.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 2; // Sensitivity
+            slider.scrollLeft = scrollLeft - walk;
+        });
+        document.getElementById('ctaBtn').addEventListener('click', () => {
+            window.location.href = "login.html";
+        });
+
+        // Profile Click
+        document.getElementById('profileLink').addEventListener('click', () => {
+            console.log("Profile clicked");
+            alert("Opening User Profile...");
+        });
+
+        // Start Your Journey Click
+        document.getElementById('ctaBtn').addEventListener('click', () => {
+            console.log("Journey Started");
+            // Smooth scroll to collection as an example action
+            document.querySelector('.content-section').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        });
+    </script>
+</body>
+</html>

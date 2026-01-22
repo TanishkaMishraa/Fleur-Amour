@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Fleur Amour</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #000;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .serif-font { font-family: 'Playfair Display', serif; }
+        .bg-image {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
+                        url('https://www.globalcosmeticsnews.com/wp-content/uploads/2020/11/flowerbomb1_v3-950x640.jpg');
+            background-size: cover;
+            background-position: center;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-image"></div>
+
+    <div class="w-full max-w-md bg-black/40 backdrop-blur-md border border-white/10 p-12 rounded-[40px] shadow-2xl">
+        <div class="text-center mb-10">
+            <a href="index.html" class="inline-block mb-6">
+                <div class="w-16 h-16 rounded-full bg-black border border-white/20 flex items-center justify-center overflow-hidden mx-auto">
+                    <img src="logo.png" alt="FA" class="w-2/3 h-2/3 object-contain">
+                </div>
+            </a>
+            <h1 class="serif-font text-4xl text-white mb-2">Welcome Back</h1>
+            <p class="text-gray-400 text-xs uppercase tracking-[0.3em]">The Art of Essence</p>
+        </div>
+
+        <form action="#" class="space-y-8">
+            <div class="relative">
+                <input type="email" placeholder="Email Address" required class="w-full bg-transparent border-b border-white/20 py-3 text-white focus:outline-none focus:border-white transition-all font-light text-sm">
+            </div>
+            <div class="relative">
+                <input type="password" placeholder="Password" required class="w-full bg-transparent border-b border-white/20 py-3 text-white focus:outline-none focus:border-white transition-all font-light text-sm">
+            </div>
+            
+            <button type="submit" class="w-full py-4 bg-white text-black rounded-full font-medium uppercase tracking-widest text-xs hover:bg-gray-200 transition-all duration-300 transform hover:scale-[1.02]">
+                Sign In
+            </button>
+        </form>
+
+        <div class="mt-10 flex justify-between items-center text-[10px] uppercase tracking-widest text-gray-500">
+            <a href="#" class="hover:text-white transition">Forgot Password?</a>
+            <a href="index.html" class="hover:text-white transition">← Back to Home</a>
+        </div>
+        <div class="mt-8 pt-6 border-t border-white/5 text-center">
+            <p class="text-gray-500 text-[10px] uppercase tracking-[0.2em] mb-4">New to Fleur Amour?</p>
+            <a href="signup.html" class="inline-block w-full py-3 border border-white/20 text-white rounded-full font-light uppercase tracking-widest text-[10px] hover:bg-white/10 transition-all duration-300">
+                Create Profile
+            </a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scent Profile Quiz | Fleur Amour</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { background: #000; font-family: 'Inter', sans-serif; color: white; margin: 0; overflow: hidden; }
+        .serif-font { font-family: 'Playfair Display', serif; }
+        .bg-image {
+            position: fixed; inset: 0;
+            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), 
+                        url('https://www.globalcosmeticsnews.com/wp-content/uploads/2020/11/flowerbomb1_v3-950x640.jpg');
+            background-size: cover; background-position: center; z-index: -1;
+        }
+        input[type="checkbox"], input[type="radio"] { accent-color: #ffffff; width: 1.2rem; height: 1.2rem; cursor: pointer; }
+        .quiz-step { display: none; }
+        .quiz-step.active { display: block; animation: fadeIn 0.8s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Forces each option to a new line and full width */
+        .quiz-opt { 
+            display: flex; 
+            width: 100%; 
+            align-items: center; 
+            gap: 1rem; 
+            padding: 1.25rem; 
+            margin-bottom: 0.75rem; 
+            border-radius: 0.75rem; 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .quiz-opt:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.2); }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen px-4">
+    <div class="bg-image"></div>
+
+    <div class="max-w-2xl w-full">
+        <header class="text-center mb-10">
+            <h1 class="serif-font text-4xl mb-2">Scent Discovery</h1>
+            <div id="progress" class="text-gray-500 text-[10px] uppercase tracking-[0.4em]">Step 1 of 8</div>
+        </header>
+
+        <form id="quizForm" class="space-y-6">
+            
+            <section class="quiz-step active bg-white/5 border border-white/10 p-8 rounded-[30px] backdrop-blur-md">
+                <h2 class="serif-font text-2xl mb-6 text-center">How do you want your fragrance to feel?</h2>
+                <div class="flex flex-col">
+                    <label class="quiz-opt"><input type="radio" name="q1" value="ethereal" required> <span>Fresh & uplifting</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q1" value="sophisticate"> <span>Warm & comforting</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q1" value="nocturnal"> <span>Bold & confident</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q1" value="romantic"> <span>Soft & romantic</span></label>
+                </div>
+            </section>
+
+            <section class="quiz-step bg-white/5 border border-white/10 p-8 rounded-[30px] backdrop-blur-md">
+                <h2 class="serif-font text-2xl mb-6 text-center">When do you usually wear perfume?</h2>
+                <div class="flex flex-col">
+                    <label class="quiz-opt"><input type="radio" name="q2" value="ethereal"> <span>Everyday wear</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q2" value="nocturnal"> <span>Evening or night outings</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q2" value="sophisticate"> <span>Special occasions</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q2" value="sophisticate"> <span>Both daily and special moments</span></label>
+                </div>
+            </section>
+
+            <section class="quiz-step bg-white/5 border border-white/10 p-8 rounded-[30px] backdrop-blur-md">
+                <h2 class="serif-font text-2xl mb-6 text-center">How noticeable should it be?</h2>
+                <div class="flex flex-col">
+                    <label class="quiz-opt"><input type="radio" name="q3" value="romantic"> <span>Subtle and close to the skin</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q3" value="sophisticate"> <span>Balanced and noticeable</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q3" value="nocturnal"> <span>Strong and long-lasting</span></label>
+                </div>
+            </section>
+
+            <section class="quiz-step bg-white/5 border border-white/10 p-8 rounded-[30px] backdrop-blur-md">
+                <h2 class="serif-font text-2xl mb-2 text-center">Which families do you gravitate toward?</h2>
+                <p class="text-center text-gray-500 text-[10px] uppercase mb-6 tracking-widest">Select up to two</p>
+                <div class="flex flex-col">
+                    <label class="quiz-opt"><input type="checkbox" name="q4" value="romantic"> <span>Floral</span></label>
+                    <label class="quiz-opt"><input type="checkbox" name="q4" value="sophisticate"> <span>Woody</span></label>
+                    <label class="quiz-opt"><input type="checkbox" name="q4" value="nocturnal"> <span>Oriental / Spicy</span></label>
+                    <label class="quiz-opt"><input type="checkbox" name="q4" value="ethereal"> <span>Fresh / Citrus</span></label>
+                </div>
+            </section>
+
+            <section class="quiz-step bg-white/5 border border-white/10 p-8 rounded-[30px] backdrop-blur-md">
+                <h2 class="serif-font text-2xl mb-6 text-center">Which description feels most like you?</h2>
+                <div class="flex flex-col">
+                    <label class="quiz-opt"><input type="radio" name="q5" value="ethereal"> <span>Calm and minimal</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q5" value="nocturnal"> <span>Expressive and bold</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q5" value="romantic"> <span>Romantic and emotional</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q5" value="ethereal"> <span>Energetic and playful</span></label>
+                </div>
+            </section>
+
+            <section class="quiz-step bg-white/5 border border-white/10 p-8 rounded-[30px] backdrop-blur-md">
+                <h2 class="serif-font text-2xl mb-6 text-center">Which season do you feel most connected to?</h2>
+                <div class="flex flex-col">
+                    <label class="quiz-opt"><input type="radio" name="q6" value="romantic"> <span>Spring</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q6" value="ethereal"> <span>Summer</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q6" value="sophisticate"> <span>Autumn</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q6" value="nocturnal"> <span>Winter</span></label>
+                </div>
+            </section>
+
+            <section class="quiz-step bg-white/5 border border-white/10 p-8 rounded-[30px] backdrop-blur-md">
+                <h2 class="serif-font text-2xl mb-6 text-center">Do you prefer a scent that...</h2>
+                <div class="flex flex-col">
+                    <label class="quiz-opt"><input type="radio" name="q7" value="ethereal"> <span>Blends naturally with you</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q7" value="nocturnal"> <span>Makes a strong statement</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q7" value="sophisticate"> <span>Changes based on mood</span></label>
+                </div>
+            </section>
+
+            <section class="quiz-step bg-white/5 border border-white/10 p-8 rounded-[30px] backdrop-blur-md">
+                <h2 class="serif-font text-2xl mb-6 text-center">Explore beyond your comfort zone?</h2>
+                <div class="flex flex-col">
+                    <label class="quiz-opt"><input type="radio" name="q8" value="ethereal"> <span>Yes, surprise me</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q8" value="sophisticate"> <span>Maybe, slightly</span></label>
+                    <label class="quiz-opt"><input type="radio" name="q8" value="nocturnal"> <span>No, stay close to my preferences</span></label>
+                </div>
+            </section>
+
+            <div class="flex justify-between items-center pt-4">
+                <button type="button" id="prevBtn" class="invisible px-8 py-3 border border-white/20 rounded-full text-[10px] uppercase tracking-widest transition hover:bg-white/10">Previous</button>
+                <button type="button" id="nextBtn" class="px-10 py-3 bg-white text-black rounded-full text-[10px] uppercase tracking-widest font-bold transition hover:bg-gray-200">Next</button>
+                <button type="submit" id="submitBtn" class="hidden px-10 py-3 bg-white text-black rounded-full text-[10px] uppercase tracking-widest font-bold transition hover:bg-gray-200">Reveal Profile</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const steps = document.querySelectorAll('.quiz-step');
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const progress = document.getElementById('progress');
+        let currentStep = 0;
+
+        function updateStep() {
+            steps.forEach((step, idx) => step.classList.toggle('active', idx === currentStep));
+            progress.innerText = `Step ${currentStep + 1} of ${steps.length}`;
+            prevBtn.style.visibility = currentStep === 0 ? "hidden" : "visible";
+            if (currentStep === steps.length - 1) {
+                nextBtn.style.display = "none";
+                submitBtn.style.display = "block";
+            } else {
+                nextBtn.style.display = "block";
+                submitBtn.style.display = "none";
+            }
+        }
+
+        nextBtn.addEventListener('click', () => {
+            const inputs = steps[currentStep].querySelectorAll('input');
+            if (!Array.from(inputs).some(i => i.checked)) {
+                alert("Please make a selection to continue.");
+                return;
+            }
+            if (currentStep < steps.length - 1) { currentStep++; updateStep(); }
+        });
+
+        prevBtn.addEventListener('click', () => { if (currentStep > 0) { currentStep--; updateStep(); } });
+
+        document.getElementById('quizForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            let scores = { ethereal: 0, nocturnal: 0, romantic: 0, sophisticate: 0 };
+            const formData = new FormData(this);
+            for (let value of formData.values()) {
+                if (scores.hasOwnProperty(value)) scores[value]++;
+            }
+            const winner = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+            window.location.href = `result.html?match=${winner}`;
+        });
+    </script>
+</body>
+</html>

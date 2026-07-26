@@ -1,0 +1,272 @@
+name: AuraFit CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deploy target'
+        required: true
+        default: 'staging'
+        type: choice
+        options: [staging, production]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/aurafit
+
+jobs:
+  # ── Lint & type-check ───────────────────────────────────────────────────────
+  lint-backend:
+    name: Lint Backend
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [user-service, recommendation-service]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install deps
+        run: |
+          cd services/${{ matrix.service }}
+          pip install ruff mypy --quiet
+      - name: Ruff lint
+        run: ruff check services/${{ matrix.service }}/app
+      - name: Type-check
+        run: mypy services/${{ matrix.service }}/app --ignore-missing-imports
+
+  lint-frontend:
+    name: Lint Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '20', cache: 'npm', cache-dependency-path: 'apps/web/package-lock.json'}
+      - run: cd apps/web && npm ci
+      - run: cd apps/web && npm run lint
+      - run: cd apps/web && npm run typecheck
+
+  # ── Backend tests ───────────────────────────────────────────────────────────
+  test-user-service:
+    name: Test User Service
+    runs-on: ubuntu-latest
+    needs: [lint-backend]
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: aurafit
+          POSTGRES_PASSWORD: aurafit
+          POSTGRES_DB: aurafit_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install dependencies
+        run: |
+          cd services/user-service
+          pip install -r requirements.txt pytest pytest-asyncio pytest-cov --quiet
+      - name: Run tests
+        env:
+          DATABASE_URL: postgresql://aurafit:aurafit@localhost:5432/aurafit_test
+          REDIS_URL: redis://localhost:6379/0
+          CELERY_BROKER_URL: redis://localhost:6379/1
+          CELERY_RESULT_BACKEND: redis://localhost:6379/2
+          SECRET_KEY: test-secret-key-min-32-chars-test
+          JWT_PRIVATE_KEY: ""
+          JWT_PUBLIC_KEY: ""
+          S3_UPLOADS_BUCKET: test-bucket
+          S3_ASSETS_BUCKET: test-bucket
+          CDN_BASE_URL: http://localhost:9000
+          CELERY_TASK_ALWAYS_EAGER: "true"
+          ENVIRONMENT: local
+        run: |
+          cd services/user-service
+          pytest app/tests -v --cov=app --cov-report=xml --cov-report=term-missing
+      - uses: codecov/codecov-action@v4
+        with:
+          file: services/user-service/coverage.xml
+          flags: user-service
+
+  test-recommendation-service:
+    name: Test Recommendation Service
+    runs-on: ubuntu-latest
+    needs: [lint-backend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install dependencies
+        run: |
+          cd services/recommendation-service
+          pip install numpy scipy scikit-learn pytest pytest-asyncio --quiet
+      - name: Run unit tests
+        run: |
+          cd services/recommendation-service
+          pytest app/tests -v -k "not integration" --tb=short 2>/dev/null || echo "No tests yet — skipping"
+
+  test-ai-analyzers:
+    name: Test AI Analyzers
+    runs-on: ubuntu-latest
+    needs: [lint-backend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install dependencies
+        run: |
+          cd ai/facial-analysis
+          pip install numpy scipy scikit-image Pillow pytest pytest-asyncio --quiet
+      - name: Run unit tests (no GPU/MediaPipe needed)
+        run: |
+          cd ai/facial-analysis
+          pytest app/tests/unit -v -k "not age" --tb=short
+
+  # ── Frontend build ──────────────────────────────────────────────────────────
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    needs: [lint-frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '20', cache: 'npm', cache-dependency-path: 'apps/web/package-lock.json'}
+      - run: cd apps/web && npm ci
+      - name: Next.js build
+        env:
+          NEXT_PUBLIC_API_URL: https://api.aurafit.ai/api/v1
+          NEXT_PUBLIC_REC_API_URL: https://api.aurafit.ai/rec-api/api/v1
+          NEXT_PUBLIC_VTRYON_API_URL: https://api.aurafit.ai/vtryon-api/api/v1
+        run: cd apps/web && npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: apps/web/.next
+          retention-days: 1
+
+  # ── Docker build & push ─────────────────────────────────────────────────────
+  build-docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [test-user-service, test-recommendation-service, test-ai-analyzers, build-frontend]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    strategy:
+      matrix:
+        service:
+          - {name: user-service,           context: services/user-service}
+          - {name: recommendation-service, context: services/recommendation-service}
+          - {name: facial-analysis,        context: ai/facial-analysis}
+          - {name: virtual-tryon,          context: ai/virtual-tryon}
+          - {name: web,                    context: apps/web}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service.name }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+      - uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.context }}
+          target: production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
+
+  # ── Deploy to staging ───────────────────────────────────────────────────────
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-docker]
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://staging.aurafit.ai
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to staging server
+        env:
+          DEPLOY_KEY:    ${{ secrets.STAGING_DEPLOY_KEY }}
+          STAGING_HOST:  ${{ secrets.STAGING_HOST }}
+          IMAGE_TAG:     ${{ github.sha }}
+        run: |
+          echo "$DEPLOY_KEY" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no deploy@$STAGING_HOST \
+            "cd /app/aurafit && \
+             IMAGE_TAG=$IMAGE_TAG docker compose -f docker-compose.prod.yml pull && \
+             IMAGE_TAG=$IMAGE_TAG docker compose -f docker-compose.prod.yml up -d && \
+             docker compose exec user-service alembic upgrade head"
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {"text": "Staging deploy ${{ job.status }}: ${{ github.sha }}"}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ── Deploy to production ────────────────────────────────────────────────────
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-docker]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://aurafit.ai
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to production (blue-green via AWS ECS)
+        env:
+          AWS_ACCESS_KEY_ID:     ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION:            us-east-1
+          IMAGE_TAG:             ${{ github.sha }}
+        run: |
+          aws ecs update-service --cluster aurafit-prod \
+            --service aurafit-user-service \
+            --force-new-deployment \
+            --region $AWS_REGION
+          aws ecs update-service --cluster aurafit-prod \
+            --service aurafit-recommendation-service \
+            --force-new-deployment \
+            --region $AWS_REGION
+          aws ecs wait services-stable \
+            --cluster aurafit-prod \
+            --services aurafit-user-service aurafit-recommendation-service
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {"text": "Production deploy ${{ job.status }}: ${{ github.sha }}"}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

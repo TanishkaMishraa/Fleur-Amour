@@ -1,0 +1,34 @@
+# ── Web framework ──────────────────────────────────────────────────────────────
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+
+# ── CV & AI core ───────────────────────────────────────────────────────────────
+opencv-python-headless==4.10.0.84   # headless: no GUI deps (Docker)
+mediapipe==0.10.14                  # face mesh, pose, selfie segmentation
+deepface==0.0.92                    # face attribute analysis
+tensorflow==2.16.1                  # DeepFace backend (CPU/GPU)
+# torch==2.3.1                      # uncomment for PyTorch GPU workers
+# torchvision==0.18.1
+
+# ── Numerical / image processing ──────────────────────────────────────────────
+numpy==1.26.4
+scikit-image==0.23.2                # BRISQUE quality metric, Haralick texture
+scikit-learn==1.5.1                 # SVM for face shape classification
+Pillow==10.4.0
+scipy==1.14.0
+
+# ── Cloud / storage ────────────────────────────────────────────────────────────
+boto3==1.34.120                     # S3 image download
+
+# ── Config / validation ────────────────────────────────────────────────────────
+pydantic==2.7.1
+pydantic-settings==2.3.0
+
+# ── Observability ─────────────────────────────────────────────────────────────
+structlog==24.2.0
+prometheus-client==0.20.0
+
+# ── Tests ──────────────────────────────────────────────────────────────────────
+pytest==8.2.0
+pytest-asyncio==0.23.7
+httpx==0.27.0

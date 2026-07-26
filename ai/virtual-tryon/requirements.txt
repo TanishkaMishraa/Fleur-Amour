@@ -1,0 +1,48 @@
+# AuraFit — Virtual Try-On & Wardrobe AI Service (Stage 9)
+# FastAPI microservice: lipstick/foundation/eyeshadow/hair AR, wardrobe categorisation,
+# outfit generation, capsule wardrobe, celebrity matching.
+
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+orjson==3.10.6
+
+# Database
+sqlalchemy[asyncio]==2.0.30
+asyncpg==0.29.0
+alembic==1.13.1
+
+# Redis
+redis[hiredis]==5.0.4
+
+# Celery
+celery[redis]==5.4.0
+
+# Computer Vision
+opencv-python-headless==4.9.0.80
+Pillow==10.4.0
+numpy==1.26.4
+
+# Makeup AR
+mediapipe==0.10.14          # Face mesh for landmark-precise makeup placement
+scipy==1.13.1               # Colour space maths
+
+# Wardrobe AI
+torch==2.3.1
+torchvision==0.18.1
+transformers==4.41.2         # ResNet/ViT image classification
+sentence-transformers==3.0.1 # CLIP text-image embeddings for similarity
+
+# Celebrity matching
+faiss-cpu==1.8.0             # ANN search for celebrity embedding lookup
+scikit-learn==1.5.0
+
+# AWS
+boto3==1.34.107
+
+# Config
+pydantic==2.7.1
+pydantic-settings==2.3.0
+structlog==24.2.0
+
+# HTTP client
+httpx==0.27.0

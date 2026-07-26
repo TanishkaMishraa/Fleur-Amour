@@ -1,0 +1,267 @@
+# AuraFit — Development Docker Compose (Stage 10: Full Stack Integration)
+# Runs all 6 services: user-service, recommendation-service, facial-analysis,
+# virtual-tryon, Next.js frontend, plus all infrastructure.
+
+x-common-env: &common-env
+  ENVIRONMENT: local
+  DEBUG: "true"
+  LOG_LEVEL: DEBUG
+
+x-db-env: &db-env
+  DATABASE_URL: postgresql://aurafit:aurafit@postgres:5432/aurafit
+  DATABASE_POOL_SIZE: "5"
+  DATABASE_MAX_OVERFLOW: "10"
+  DATABASE_ECHO: "true"
+
+x-redis-env: &redis-env
+  REDIS_URL: redis://redis:6379/0
+  CELERY_BROKER_URL: redis://redis:6379/1
+  CELERY_RESULT_BACKEND: redis://redis:6379/2
+
+x-s3-env: &s3-env
+  S3_UPLOADS_BUCKET: aurafit-uploads-local
+  S3_ASSETS_BUCKET: aurafit-assets-local
+  CDN_BASE_URL: "http://localhost:9000"
+  AWS_REGION: us-east-1
+
+x-auth-env: &auth-env
+  SECRET_KEY: "dev-secret-key-min-32-chars-change-in-prod"
+
+services:
+
+  # ── Infrastructure ─────────────────────────────────────────────────────────
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: aurafit-postgres
+    environment:
+      POSTGRES_USER: aurafit
+      POSTGRES_PASSWORD: aurafit
+      POSTGRES_DB: aurafit
+    ports: ["5432:5432"]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aurafit"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: aurafit-redis
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+    ports: ["6379:6379"]
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: aurafit-minio
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    command: server /data --console-address ":9001"
+    ports: ["9000:9000", "9001:9001"]
+    volumes: [minio_data:/data]
+    profiles: [tools]
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: aurafit-nginx
+    ports: ["80:80"]
+    volumes:
+      - ./infra/nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+    depends_on: [user-service, recommendation-service]
+    restart: unless-stopped
+
+  # ── Backend services ────────────────────────────────────────────────────────
+
+  user-service:
+    build:
+      context: ./services/user-service
+      target: production
+    container_name: aurafit-user-service
+    environment:
+      <<: [*common-env, *db-env, *redis-env, *s3-env, *auth-env]
+      APP_NAME: "AuraFit User Service"
+      PORT: "8001"
+      ALLOWED_ORIGINS: '["http://localhost:3000","http://localhost:80"]'
+      RECOMMENDATION_SERVICE_URL: "http://recommendation-service:8003"
+      AI_FACIAL_SERVICE_URL: "http://facial-analysis:8010"
+    ports: ["8001:8001"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis:    {condition: service_healthy}
+    volumes: ["./services/user-service:/app"]
+    restart: unless-stopped
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
+
+  recommendation-service:
+    build:
+      context: ./services/recommendation-service
+      target: production
+    container_name: aurafit-recommendation-service
+    environment:
+      <<: [*common-env, *db-env, *redis-env, *s3-env]
+      APP_NAME: "AuraFit Recommendation Service"
+      PORT: "8003"
+      USER_SERVICE_URL: "http://user-service:8001"
+    ports: ["8003:8003"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis:    {condition: service_healthy}
+    volumes: ["./services/recommendation-service:/app"]
+    restart: unless-stopped
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8003", "--reload"]
+
+  facial-analysis:
+    build:
+      context: ./ai/facial-analysis
+      target: production
+    container_name: aurafit-facial-analysis
+    environment:
+      <<: [*common-env, *s3-env, *redis-env]
+      APP_NAME: "AuraFit Facial Analysis"
+      PORT: "8010"
+    ports: ["8010:8010"]
+    volumes: ["./ai/facial-analysis:/app"]
+    restart: unless-stopped
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8010", "--reload"]
+
+  virtual-tryon:
+    build:
+      context: ./ai/virtual-tryon
+      target: production
+    container_name: aurafit-virtual-tryon
+    environment:
+      <<: [*common-env, *s3-env, *redis-env]
+      APP_NAME: "AuraFit Virtual Try-On"
+      PORT: "8020"
+      USER_SERVICE_URL: "http://user-service:8001"
+    ports: ["8020:8020"]
+    volumes: ["./ai/virtual-tryon:/app"]
+    restart: unless-stopped
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8020", "--reload"]
+
+  # ── Frontend ────────────────────────────────────────────────────────────────
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      target: builder
+    container_name: aurafit-web
+    environment:
+      NODE_ENV: "development"
+      NEXT_PUBLIC_API_URL: "http://localhost:80/api/v1"
+      NEXT_PUBLIC_REC_API_URL: "http://localhost:80/rec-api/api/v1"
+      NEXT_PUBLIC_VTRYON_API_URL: "http://localhost:80/vtryon-api/api/v1"
+    ports: ["3000:3000"]
+    depends_on: [user-service]
+    volumes:
+      - ./apps/web/src:/app/src
+      - ./apps/web/public:/app/public
+    command: ["npm", "run", "dev"]
+
+  # ── Celery workers ──────────────────────────────────────────────────────────
+
+  celery-default:
+    build: {context: ./services/user-service, target: production}
+    container_name: aurafit-celery-default
+    environment:
+      <<: [*common-env, *db-env, *redis-env, *s3-env, *auth-env]
+    depends_on: [redis, postgres]
+    volumes: ["./services/user-service:/app"]
+    command:
+      - celery
+      - -A
+      - app.tasks.celery_app.celery_app
+      - worker
+      - --queues=default,notifications,maintenance
+      - --concurrency=4
+      - --loglevel=info
+      - --hostname=default@%h
+
+  celery-ai:
+    build: {context: ./services/user-service, target: production}
+    container_name: aurafit-celery-ai
+    environment:
+      <<: [*common-env, *db-env, *redis-env, *s3-env, *auth-env]
+      AI_FACIAL_SERVICE_URL: "http://facial-analysis:8010"
+    depends_on: [redis, postgres, facial-analysis]
+    volumes: ["./services/user-service:/app"]
+    command:
+      - celery
+      - -A
+      - app.tasks.celery_app.celery_app
+      - worker
+      - --queues=ai.high,ai.low
+      - --concurrency=2
+      - --loglevel=info
+      - --hostname=ai@%h
+
+  celery-rec:
+    build: {context: ./services/recommendation-service, target: production}
+    container_name: aurafit-celery-rec
+    environment:
+      <<: [*common-env, *db-env, *redis-env, *s3-env]
+    depends_on: [redis, postgres]
+    volumes: ["./services/recommendation-service:/app"]
+    command:
+      - celery
+      - -A
+      - app.tasks.celery_app.celery_app
+      - worker
+      - --queues=recommendations,media
+      - --concurrency=2
+      - --loglevel=info
+      - --hostname=rec@%h
+
+  celery-beat:
+    build: {context: ./services/user-service, target: production}
+    container_name: aurafit-celery-beat
+    environment:
+      <<: [*common-env, *db-env, *redis-env, *s3-env, *auth-env]
+    depends_on: [redis, postgres]
+    volumes: ["./services/user-service:/app"]
+    command:
+      - celery
+      - -A
+      - app.tasks.celery_app.celery_app
+      - beat
+      - --loglevel=info
+
+  flower:
+    image: mher/flower:2.0
+    container_name: aurafit-flower
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/1
+    ports: ["5555:5555"]
+    depends_on: [redis]
+
+  # ── Dev tools (optional) ────────────────────────────────────────────────────
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: aurafit-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: dev@aurafit.ai
+      PGADMIN_DEFAULT_PASSWORD: devpassword
+    ports: ["5050:80"]
+    depends_on: [postgres]
+    profiles: [tools]
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+networks:
+  default:
+    name: aurafit-network

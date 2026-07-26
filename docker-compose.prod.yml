@@ -1,0 +1,164 @@
+# AuraFit — Production docker-compose overrides.
+# Used as: docker compose -f docker-compose.yml -f docker-compose.prod.yml up
+# Secrets injected via environment; never stored in this file.
+# In production, use Kubernetes manifests (infra/k8s/) instead.
+
+services:
+
+  user-service:
+    build:
+      context: ./services/user-service
+      target: production
+    restart: always
+    volumes: []                   # No volume mounts in prod (immutable image)
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+      LOG_LEVEL: INFO
+      DATABASE_ECHO: "false"
+      WORKERS: "4"
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8001"
+      - --workers
+      - "4"
+      - --loop
+      - uvloop
+      - --http
+      - httptools
+      - --proxy-headers
+      - --forwarded-allow-ips
+      - "*"
+      - --access-log
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+  celery-default:
+    restart: always
+    volumes: []
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+      LOG_LEVEL: INFO
+    command:
+      - celery
+      - -A
+      - app.tasks.celery_app.celery_app
+      - worker
+      - --queues=default,notifications,maintenance
+      - --concurrency=8
+      - --loglevel=info
+      - --hostname=default@%h
+      - --without-gossip
+      - --without-mingle
+
+  celery-beat:
+    build:
+      context: ./services/user-service
+      target: production
+    restart: always
+    volumes: []
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+    command:
+      - celery
+      - -A
+      - app.tasks.celery_app.celery_app
+      - beat
+      - --loglevel=info
+      - --scheduler
+      - celery.beat.PersistentScheduler
+    deploy:
+      replicas: 1               # Beat must never run more than one instance
+
+  nginx:
+    volumes:
+      - ./infra/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+    restart: always
+
+  # Remove dev tools in production
+  pgadmin:
+    profiles:
+      - never             # Never starts in production
+
+  flower:
+    # Flower is internal-only in production — not exposed via Nginx
+    ports: []
+    restart: always
+
+  # ── Frontend (Stage 10: containerised Next.js) ──────────────────────────
+  web:
+    build:
+      context: ./apps/web
+      target: production
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.aurafit.ai/api/v1}
+        NEXT_PUBLIC_REC_API_URL: ${NEXT_PUBLIC_REC_API_URL:-https://rec.aurafit.ai/api/v1}
+        NEXT_PUBLIC_VTRYON_API_URL: ${NEXT_PUBLIC_VTRYON_API_URL:-https://vtryon.aurafit.ai/api/v1}
+    restart: always
+    volumes: []
+    environment:
+      NODE_ENV: production
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+
+  # ── Recommendation service (Stage 10: full stack) ───────────────────────
+  recommendation-service:
+    build:
+      context: ./services/recommendation-service
+      target: production
+    restart: always
+    volumes: []
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+      WORKERS: "2"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+
+  # ── AI: Facial analysis ─────────────────────────────────────────────────
+  facial-analysis:
+    build:
+      context: ./ai/facial-analysis
+    restart: always
+    volumes: []
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 4G
+
+  # ── AI: Virtual try-on + wardrobe AI + celebrity matching ───────────────
+  virtual-tryon:
+    build:
+      context: ./ai/virtual-tryon
+    restart: always
+    volumes: []
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 4G
